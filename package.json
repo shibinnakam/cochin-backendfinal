@@ -1,4 +1,4 @@
-<<<<<<< HEAD
+
 {
   "name": "backend",
   "version": "1.0.0",
@@ -62,4 +62,4 @@
     "nodemon": "^3.1.10"
   }
 }
->>>>>>> 9312ea4750009a9cbb06cc91c3cbfaaa47b92784
+
