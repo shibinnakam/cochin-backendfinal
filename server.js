@@ -7,7 +7,7 @@ const session = require('express-session');
 const passport = require('passport');
 const User = require('./models/User');
 
-// Routes
+// ---------- Routes ----------
 const authRoutes = require('./routes/auth');
 const productRoutes = require('./routes/ProductRoutes');
 const categoryRoutes = require('./routes/categoryRoutes');
@@ -21,9 +21,17 @@ const paymentRoutes = require("./routes/paymentRoutes");
 const app = express();
 
 // ---------- Middleware ----------
-app.use(cors({ origin: 'http://localhost:8080', credentials: true }));
 app.use(express.json());
 app.use("/uploads", express.static("uploads"));
+
+// ✅ Allow both local and deployed frontends to access backend
+app.use(cors({
+  origin: [
+    'https://cochinlive-frontend.onrender.com', // deployed frontend
+    'http://localhost:8080' // local dev
+  ],
+  credentials: true,
+}));
 
 // ---------- Session & Passport Setup ----------
 app.use(
@@ -32,7 +40,7 @@ app.use(
     resave: false,
     saveUninitialized: false,
     cookie: {
-      secure: false, // true if using HTTPS
+      secure: process.env.NODE_ENV === "production", // true only in production
       maxAge: 24 * 60 * 60 * 1000, // 1 day
     },
   })
@@ -43,18 +51,21 @@ app.use(passport.session());
 
 // ✅ Passport serialize/deserialize setup
 passport.serializeUser((user, done) => {
-  done(null, user); // Save user object in session
+  done(null, user);
 });
 
 passport.deserializeUser((user, done) => {
-  done(null, user); // Retrieve user object from session
+  done(null, user);
 });
 
 // ---------- MongoDB Connection ----------
 mongoose
-  .connect(process.env.MONGO_URI)
+  .connect(process.env.MONGO_URI, {
+    useNewUrlParser: true,
+    useUnifiedTopology: true,
+  })
   .then(async () => {
-    console.log('Connected to MongoDB');
+    console.log('✅ Connected to MongoDB');
 
     // Create default admin if not exists
     const adminEmail = 'admincd@gmail.com';
@@ -68,12 +79,12 @@ mongoose
         role: 'admin',
       });
       await adminUser.save();
-      console.log('✅ Default admin user created');
+      console.log('🟢 Default admin user created');
     } else {
       console.log('ℹ️ Admin user already exists');
     }
   })
-  .catch((err) => console.error('MongoDB Error:', err.message));
+  .catch((err) => console.error('❌ MongoDB Error:', err.message));
 
 // ---------- Routes ----------
 app.use('/api/auth', authRoutes);
@@ -88,7 +99,7 @@ app.use("/api/payment", paymentRoutes);
 
 // ---------- Test Route ----------
 app.get('/', (req, res) => {
-  res.send('API is running...');
+  res.send('✅ API is running...');
 });
 
 // ---------- Start Server ----------
